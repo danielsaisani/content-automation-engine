@@ -3,6 +3,7 @@
 
 9.8.S
 - Project Outset
-- [ ] Decide Language (Most likely Go!)
-- [ ] Decide Architecture
-- [ ] Decide Infrastructure
+- [x] Decide Language (Most likely Go!)
+- [x] Decide Architecture
+- [x] Decide Infrastructure
+    - Linode + GCP / GCP
