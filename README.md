@@ -1,5 +1,5 @@
 # Content Automation Engine V2 (from Tiktok Incubator Project)
 
-# Architecture
+Architecture
 
 - Event Driven Modular Monolith
