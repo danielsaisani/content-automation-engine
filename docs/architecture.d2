@@ -1,24 +1,43 @@
-Frontend: {
-  Customer Dashboard
-  Admin Dashboard
+Dashboards: {
+  Frontend: {
+    CustomerDashboard
+    AdminDashboard
+  }
+
+  Backend: {
+    DatabaseManager
+  }
 }
 
 Database: {
-  shape: cylinder
   DashboardDatabase: {
-    Dashboard User Profiles
-    User Preference
+    shape: cylinder
+    DashboardUserProfiles
+    UserPreference
   }
-  UserTikTokCredentials
+  ContentDatabase: {
+    shape: cylinder
+    UserTikTokCredentials
+  }
 }
-
 
 Backend: {
-    Content Generator
-    Content Posting Service
-    Reddit Story Scraping
+  ContentLayer: {
+    ContentGeneratorService
+    ContentPostingService
+    ContentScrapingService
+    ContentSchedulingService
+    DatabaseManager
+  }
+  API
+  TaskService: {
+    Temporal
+  }
 }
 
-Frontend -> Backend
-Frontend -> Database.DashboardDatabase
-Backend -> Database.UserTikTokCredentials
+Dashboards.Frontend -> Dashboards.Backend: Interacts with
+Dashboards.Backend -> Backend.API
+Dashboards.Backend.DatabaseManager -> Database.DashboardDatabase
+Backend.API -> Backend.ContentLayer
+Backend.ContentLayer -> Backend.TaskService
+Backend.ContentLayer.DatabaseManager -> Database.ContentDatabase

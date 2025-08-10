@@ -1,0 +1,35 @@
+ContentGeneratorService: {
+
+}
+
+ContentSchedulingService: {
+
+}
+
+ContentPostingService: {
+
+}
+
+ContentScrapingService: {
+
+}
+
+TaskService: {
+
+}
+
+Backend: {
+  ContentLayer: {
+    ContentGeneratorService
+    ContentPostingService
+    ContentScrapingService
+    ContentSchedulingService
+    DatabaseManager
+  }
+  API
+  TaskService: {
+    Temporal
+  }
+}
+
+ContentSchedulingService -> ContentScrapingService -> ContentGeneratorService -> ContentPostingService
