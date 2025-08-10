@@ -1,3 +1,5 @@
+direction: right
+
 Dashboards: {
   Frontend: {
     CustomerDashboard
@@ -13,11 +15,13 @@ Database: {
   DashboardDatabase: {
     shape: cylinder
     DashboardUserProfiles
-    UserPreference
+    UserPreferences
+    Jobs
   }
   ContentDatabase: {
     shape: cylinder
     UserTikTokCredentials
+    MediaAssets
   }
 }
 
@@ -35,7 +39,7 @@ Backend: {
   }
 }
 
-Dashboards.Frontend -> Dashboards.Backend: Interacts with
+Dashboards.Frontend -> Dashboards.Backend: "Interacts with"
 Dashboards.Backend -> Backend.API
 Dashboards.Backend.DatabaseManager -> Database.DashboardDatabase
 Backend.API -> Backend.ContentLayer
