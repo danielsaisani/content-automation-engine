@@ -1,4 +1,4 @@
 import { startApplication } from "./application";
 import { parseApplicationConfig } from "./application-config";
 
-const application = startApplication(parseApplicationConfig(process.env));
+const application = await startApplication(parseApplicationConfig(process.env));
