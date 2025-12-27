@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "esnext",
+    "types": ["node"]
+  },
+  "exclude": ["test/**/*"],
+  "include": ["main/**/*", "../services/web-service/main/routers", "../services/web-service/main/context.ts", "../services/web-service/main/index.ts", "../services/web-service/main/procedures.ts", "../services/web-service/main/session.ts", "../services/web-service/main/web-service-config.ts", "../services/web-service/main/web-service.ts"]
+}
