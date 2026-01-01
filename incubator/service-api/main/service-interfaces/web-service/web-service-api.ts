@@ -1,3 +1,3 @@
 import { Service } from "../../service";
 
-export interface WebServiceApi extends Service {}
+export interface WebService extends Service {}

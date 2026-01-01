@@ -42,3 +42,9 @@
 - The needs are:
     - This short must not have been uploaded already by this tenant (maybe not until some time has elapsed)
     - It is the most "popular" short in the set of shorts that are most "relevant" to the tenant
+
+
+
+
+
+- Base dependencies such as temporal, the database client creation and a clock and their factories are handed to downstream factories to create the respective services
