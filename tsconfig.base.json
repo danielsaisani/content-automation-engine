@@ -22,6 +22,9 @@
     "baseUrl": ".",
     "paths": {
       "@incubator/clock": ["incubator/clock/main/index.ts"],
+      "@incubator/service-api": ["incubator/service-api/main/index.ts"],
+      "@incubator/scraper-service": ["incubator/services/scraper-service/main/index.ts"],
+      "@incubator/web-service": ["incubator/services/web-service/main/index.ts"]
     }
   },
   "exclude": [
