@@ -12,6 +12,7 @@ type Event struct {
 	TriggeredAt time.Time
 }
 
+// NewEvent creates a new base event that handles the ID allocation and timestamp, this should be used across all services to create emitted events
 func NewEvent() *Event {
 	return &Event{
 		ID:          uuid.New().String(),
