@@ -3,6 +3,7 @@ package main
 import (
 	"content-automation-engine/cmd/config"
 	"content-automation-engine/internal/events"
+	"content-automation-engine/internal/observability/notifier"
 	"content-automation-engine/internal/scheduler"
 	"context"
 	"os"
@@ -22,6 +23,9 @@ func main() {
 
 	scheduler := scheduler.NewRealScheduler(cfg, topicCh)
 	go scheduler.Run(ctx)
+
+	notifier := notifier.NewNotifierService(cfg, topicCh)
+	go notifier.Run(ctx)
 
 	cfg.Logger.Info("Engine started..")
 
