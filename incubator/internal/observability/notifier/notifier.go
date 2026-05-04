@@ -2,13 +2,15 @@ package notifier
 
 import (
 	"content-automation-engine/internal/clock"
+	"content-automation-engine/internal/events"
 	"context"
 	"log/slog"
 )
 
 type NotifierService struct {
-	clock  clock.Clock
-	logger *slog.Logger
+	clock     clock.Clock
+	logger    *slog.Logger
+	topicChan chan events.TopicTriggered
 }
 
 type NotificationPayload struct {
