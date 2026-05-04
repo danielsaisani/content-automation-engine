@@ -38,9 +38,9 @@ func (n *NotifierService) Run(ctx context.Context) error {
 	defer ticker.Stop()
 
 	for {
+		n.logger.Info("Notifier ticked..")
 		select {
 		case <-ticker.C:
-			n.logger.Info("Notifier ticked..")
 			// TODO: Check for all notifications across all event channels
 		case <-ctx.Done():
 			n.logger.Info("Notifier stopped..")
