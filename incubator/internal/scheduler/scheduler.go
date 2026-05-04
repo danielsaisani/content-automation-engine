@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"content-automation-engine/cmd/config"
 	"content-automation-engine/internal/clock"
 	"content-automation-engine/internal/events"
 	"context"
@@ -15,11 +16,11 @@ type RealScheduler struct {
 	logger   *slog.Logger
 }
 
-func NewRealScheduler(clock clock.Clock, logger *slog.Logger, eventBus chan<- events.TopicTriggered) *RealScheduler {
+func NewRealScheduler(cfg *config.Config, eventBus chan<- events.TopicTriggered) *RealScheduler {
 	return &RealScheduler{
-		clock:    clock,
+		clock:    cfg.Clock,
 		interval: time.Hour,
-		logger:   logger,
+		logger:   cfg.Logger,
 		eventBus: eventBus,
 	}
 }

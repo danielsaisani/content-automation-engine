@@ -1,36 +1,33 @@
 package main
 
 import (
-	"content-automation-engine/internal/clock"
+	"content-automation-engine/cmd/config"
 	"content-automation-engine/internal/events"
 	"content-automation-engine/internal/scheduler"
 	"context"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	cfg := config.NewConfig()
 
-	logger.Info("Starting engine..")
+	cfg.Logger.Info("Starting engine..")
 
 	topicCh := make(chan events.TopicTriggered, 10)
-
-	clock := clock.NewRealClock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	scheduler := scheduler.NewRealScheduler(clock, logger, topicCh)
+	scheduler := scheduler.NewRealScheduler(cfg, topicCh)
 	go scheduler.Run(ctx)
 
-	logger.Info("Engine started..")
+	cfg.Logger.Info("Engine started..")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("Engine stopping..")
+	cfg.Logger.Info("Engine stopping..")
 }
