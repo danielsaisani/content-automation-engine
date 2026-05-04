@@ -23,6 +23,8 @@ func NewEvent(clock clock.Clock) *Event {
 
 type Topic string
 
+// TODO: figure out better name for this or better way to emit "scheduled" events
+// Right now, we infer that since this is a topic event, it implies the scheduler has scheduled an upload (but these are distinct events)
 type TopicTriggered struct {
 	Event
 	Topic Topic
