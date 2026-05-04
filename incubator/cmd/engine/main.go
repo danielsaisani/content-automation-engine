@@ -1,6 +1,7 @@
 package main
 
 import (
+	"content-automation-engine/internal/clock"
 	"content-automation-engine/internal/events"
 	"content-automation-engine/internal/scheduler"
 	"context"
@@ -17,7 +18,7 @@ func main() {
 
 	topicCh := make(chan events.TopicTriggered, 10)
 
-	clock := scheduler.NewRealClock()
+	clock := clock.NewRealClock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

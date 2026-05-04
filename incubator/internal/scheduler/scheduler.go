@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"content-automation-engine/internal/clock"
 	"content-automation-engine/internal/events"
 	"context"
 	"log/slog"
@@ -8,13 +9,13 @@ import (
 )
 
 type RealScheduler struct {
-	clock    *RealClock
+	clock    clock.Clock
 	interval time.Duration
 	eventBus chan<- events.TopicTriggered
 	logger   *slog.Logger
 }
 
-func NewRealScheduler(clock *RealClock, logger *slog.Logger, eventBus chan<- events.TopicTriggered) *RealScheduler {
+func NewRealScheduler(clock clock.Clock, logger *slog.Logger, eventBus chan<- events.TopicTriggered) *RealScheduler {
 	return &RealScheduler{
 		clock:    clock,
 		interval: time.Hour,
@@ -37,7 +38,7 @@ func (s *RealScheduler) Run(ctx context.Context) error {
 		case <-ticker.C:
 			s.logger.Info("Triggering event..")
 			s.eventBus <- events.TopicTriggered{
-				Event: *events.NewEvent(),
+				Event: *events.NewEvent(s.clock),
 				// TODO: Replace with actual topic
 				Topic: "misc",
 			}

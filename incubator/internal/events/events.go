@@ -1,6 +1,7 @@
 package events
 
 import (
+	"content-automation-engine/internal/clock"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,10 +14,10 @@ type Event struct {
 }
 
 // NewEvent creates a new base event that handles the ID allocation and timestamp, this should be used across all services to create emitted events
-func NewEvent() *Event {
+func NewEvent(clock clock.Clock) *Event {
 	return &Event{
 		ID:          uuid.New().String(),
-		TriggeredAt: time.Now(),
+		TriggeredAt: clock.Now(),
 	}
 }
 
