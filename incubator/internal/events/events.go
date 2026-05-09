@@ -29,3 +29,13 @@ type TopicTriggered struct {
 	Event
 	Topic Topic
 }
+
+type Story struct {
+	Title string
+	Body  string
+}
+
+type CreatorEvent struct {
+	Event
+	Story Story
+}
