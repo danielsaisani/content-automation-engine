@@ -1,7 +1,7 @@
 package notifier
 
 import (
-	"content-automation-engine/cmd/config"
+	"content-automation-engine/cmd/application"
 	"content-automation-engine/internal/clock"
 	"content-automation-engine/internal/events"
 	"context"
@@ -14,18 +14,18 @@ type NotifierService struct {
 	interval time.Duration
 	logger   *slog.Logger
 	// Yes.. this is hacky, but I don't see an instant solution to polymorphic event consolidation
-	topicChan chan events.TopicTriggered
+	topicChan <-chan events.TopicTriggered
 }
 
 type NotificationPayload struct {
 	Message Message
 }
 
-func NewNotifierService(cfg *config.Config, topicChan chan events.TopicTriggered) *NotifierService {
+func NewNotifierService(serviceDependencies *application.ServiceDependencies, topicChan chan events.TopicTriggered) *NotifierService {
 	return &NotifierService{
-		clock:     cfg.Clock,
+		clock:     serviceDependencies.Clock,
 		interval:  time.Minute,
-		logger:    cfg.Logger,
+		logger:    serviceDependencies.Logger,
 		topicChan: topicChan,
 	}
 }
@@ -33,14 +33,10 @@ func NewNotifierService(cfg *config.Config, topicChan chan events.TopicTriggered
 func (n *NotifierService) Run(ctx context.Context) error {
 	n.logger.Info("Starting notifier service..")
 
-	// TODO: replace with actual clock that is injected
-	ticker := time.NewTicker(n.interval)
-	defer ticker.Stop()
-
 	for {
-		n.logger.Info("Notifier ticked..")
 		select {
-		case <-ticker.C:
+		case <-n.topicChan:
+			n.logger.Info("Notification worthy event consumed!")
 			// TODO: Check for all notifications across all event channels
 		case <-ctx.Done():
 			n.logger.Info("Notifier stopped..")

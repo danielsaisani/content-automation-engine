@@ -1,9 +1,13 @@
 package clock
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type Clock interface {
-	Now() time.Time
+	// Returns the clock's current time in UTC
+	Now(ctx context.Context) time.Time
 }
 
 // RealClock is a clock that returns the current time
@@ -14,7 +18,7 @@ func NewRealClock() *RealClock {
 	return &RealClock{}
 }
 
-func (c RealClock) Now() time.Time {
+func (c RealClock) Now(ctx context.Context) time.Time {
 	return time.Now()
 }
 

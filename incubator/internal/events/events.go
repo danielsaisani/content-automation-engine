@@ -2,6 +2,7 @@ package events
 
 import (
 	"content-automation-engine/internal/clock"
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,25 +18,26 @@ type Event struct {
 func NewEvent(clock clock.Clock) *Event {
 	return &Event{
 		ID:          uuid.New().String(),
-		TriggeredAt: clock.Now(),
+		TriggeredAt: clock.Now(context.TODO()),
 	}
 }
 
-type Topic string
+type TopicPayload string
 
 // TODO: figure out better name for this or better way to emit "scheduled" events
 // Right now, we infer that since this is a topic event, it implies the scheduler has scheduled an upload (but these are distinct events)
 type TopicTriggered struct {
 	Event
-	Topic Topic
+	Topic TopicPayload
 }
 
-type Story struct {
+type StoryPayload struct {
 	Title string
 	Body  string
 }
 
-type CreatorEvent struct {
+// Event to signify a story has been scraped and is ready to be used for the next step in the pipeline or by any downstream consumers
+type StoryScraped struct {
 	Event
-	Story Story
+	Story StoryPayload
 }

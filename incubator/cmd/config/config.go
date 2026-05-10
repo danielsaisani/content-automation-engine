@@ -1,19 +1,20 @@
 package config
 
 import (
-	"content-automation-engine/internal/clock"
-	"log/slog"
+	"content-automation-engine/internal/creator"
+	"context"
 	"os"
 )
 
 type Config struct {
-	Clock  clock.Clock
-	Logger *slog.Logger
+	StoryRepository *creator.MongoStoryRepository
 }
 
 func NewConfig() *Config {
-	return &Config{
-		Clock:  clock.NewRealClock(),
-		Logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
-	}
+	return &Config{}
+}
+
+func (c *Config) Load(ctx context.Context) {
+	mongoRepositoryConfig := creator.NewMongoStoryRepositoryConfig(os.Getenv("MONGO_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_APP_NAME"))
+	c.StoryRepository = creator.NewMongoStoryRepository(mongoRepositoryConfig)
 }
