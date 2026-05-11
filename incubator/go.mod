@@ -5,13 +5,11 @@ go 1.24.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/turnage/graw v0.0.0-20250321203609-ee225b526649
-	go.mongodb.org/mongo-driver v1.17.9
 	go.mongodb.org/mongo-driver/v2 v2.6.0
 )
 
 require (
 	github.com/golang/protobuf v1.3.2 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/turnage/redditproto v0.0.0-20151223012412-afedf1b6eddb // indirect
