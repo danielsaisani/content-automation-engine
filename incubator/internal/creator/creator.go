@@ -39,6 +39,25 @@ func (c *CreatorService) Run(ctx context.Context) error {
 		case <-c.schedulerEventBus:
 			c.logger.Info("Scheduled story retrieved!")
 			// Consume from scheduler bus
+			select {
+			case story := <-c.StoryGenerator.Posts():
+				// save story to repository
+				_, err := c.StoryRepository.Put(story)
+				if err != nil {
+					return err
+				}
+
+				// emit event to creator event bus
+				c.creatorEventBus <- events.StoryScraped{
+					Event: *events.NewEvent(c.clock),
+					Story: events.StoryPayload{
+						Title: story.Title,
+						Body:  story.Body,
+					},
+				}
+			default:
+				c.logger.Info("No stories available yet!")
+			}
 		case <-ctx.Done():
 			c.logger.Info("Creator shutting down..")
 			return nil
