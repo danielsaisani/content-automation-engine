@@ -31,7 +31,7 @@ func NewMongoStoryRepository(repositoryConfig *MongoStoryRepositoryConfig) *Mong
 	}
 }
 
-func (mr *MongoStoryRepository) InitialiseClient() error {
+func (mr *MongoStoryRepository) InitialiseClient(ctx context.Context) error {
 	if mr.Config == nil || mr.Config.ConnectionURL == "" {
 		return errors.New("missing mongodb connection url")
 	}
@@ -44,8 +44,8 @@ func (mr *MongoStoryRepository) InitialiseClient() error {
 		return err
 	}
 
-	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
-		_ = client.Disconnect(context.Background())
+	if err = client.Ping(ctx, readpref.Primary()); err != nil {
+		_ = client.Disconnect(ctx)
 		return err
 	}
 
@@ -55,7 +55,17 @@ func (mr *MongoStoryRepository) InitialiseClient() error {
 
 func (mr *MongoStoryRepository) Get(interface{}) (interface{}, error) { return nil, nil }
 
-func (mr *MongoStoryRepository) Put(interface{}) (bool, error) { return false, nil }
+func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
+	if mr.Client == nil {
+		return false, errors.New("mongodb client not initialised")
+	}
+	_, err := mr.Client.Database("prod").Collection("stories").InsertOne(context.TODO(), story)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
 
 // Performs a health check on the StoryRepository
 func (mr *MongoStoryRepository) Healthy(ctx context.Context) bool {

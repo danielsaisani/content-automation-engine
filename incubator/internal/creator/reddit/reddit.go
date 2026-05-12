@@ -3,6 +3,9 @@ package reddit
 import (
 	"content-automation-engine/internal/api"
 	"context"
+	"fmt"
+	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/turnage/graw"
@@ -13,9 +16,25 @@ type RedditScraperConfig struct {
 	Engine *graw.Config
 }
 
+// normalizeSubredditName returns the name graw expects: no leading slashes and no "r/" prefix.
+// graw builds paths as "/r/" + join(names, "+") + "/new", so "/r/foo" would become "/r//r/foo/new".
+func normalizeSubredditName(name string) string {
+	s := strings.TrimSpace(strings.TrimPrefix(name, "/"))
+	if strings.HasPrefix(strings.ToLower(s), "r/") {
+		s = s[2:]
+	}
+	return strings.TrimPrefix(strings.TrimSpace(s), "/")
+}
+
 // NewRedditScraperConfig creates a new RedditScraperConfig with the given subreddits
 func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
-	return &RedditScraperConfig{&graw.Config{Subreddits: subreddits}}
+	out := make([]string, 0, len(subreddits))
+	for _, s := range subreddits {
+		if n := normalizeSubredditName(s); n != "" {
+			out = append(out, n)
+		}
+	}
+	return &RedditScraperConfig{&graw.Config{Subreddits: out}}
 }
 
 type Handler struct {
@@ -23,6 +42,7 @@ type Handler struct {
 }
 
 func (h *Handler) Post(post *reddit.Post) error {
+	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
 	h.posts <- &api.Story{Title: post.Title, Body: post.SelfText}
 	return nil
 }
@@ -49,7 +69,7 @@ func (rc *RedditScraper) Run(ctx context.Context) error {
 		return err
 	}
 
-	stop, wait, err := graw.Scan(rc.handler, script, *rc.config.Engine)
+	stop, _, err := graw.Scan(rc.handler, script, *rc.config.Engine)
 	if err != nil {
 		return err
 	}
@@ -59,5 +79,5 @@ func (rc *RedditScraper) Run(ctx context.Context) error {
 		stop()
 	}()
 
-	return wait()
+	return nil
 }

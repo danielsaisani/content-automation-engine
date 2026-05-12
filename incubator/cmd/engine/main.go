@@ -9,6 +9,7 @@ import (
 	"content-automation-engine/internal/observability/notifier"
 	"content-automation-engine/internal/scheduler"
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,9 +17,35 @@ import (
 
 func main() {
 	cfg := config.NewConfig()
-	cfg.Load(context.Background())
+	if err := cfg.Load(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+	subreddits := []string{
+		"worldnews", "news", "politics", "europe", "ukpolitics",
+		"conservative", "liberal", "geopolitics", "upliftingnews", "nottheonion",
+		"nfl", "nba", "soccer", "baseball", "hockey",
+		"formula1", "tennis", "MMA", "cricket", "fantasyfootball",
+		"gaming", "pcgaming", "PS5", "XboxSeriesX", "leagueoflegends",
+		"Minecraft", "Fortnite", "GlobalOffensive", "Competitiveoverwatch", "DotA2",
+		"technology", "programming", "Python", "javascript", "webdev",
+		"artificial", "MachineLearning", "ChatGPT", "cybersecurity", "linux",
+		"movies", "television", "anime", "marvelstudios", "StarWars",
+		"NetflixBestOf", "popheads", "hiphopheads", "music", "books",
+		"AskReddit", "AmItheAsshole", "relationship_advice", "dating_advice", "tifu",
+		"confession", "unpopularopinion", "changemyview", "LifeProTips", "self",
+		"wallstreetbets", "investing", "personalfinance", "CryptoCurrency", "Bitcoin",
+		"ethereum", "stocks", "financialindependence", "frugal", "eupersonalfinance",
+		"memes", "dankmemes", "funny", "me_irl", "facepalm",
+		"therewasanattempt", "Unexpected", "instant_regret", "nextfuckinglevel", "oddlysatisfying",
+		"science", "space", "history", "todayilearned", "explainlikeimfive",
+		"askscience", "medicine", "psychology", "philosophy", "economics",
+		"pics", "gifs", "videos", "WTF", "interestingasfuck",
+		"mildlyinteresting", "photoshopbattles", "DIY", "food", "aww", "AITAH",
+	}
 
-	redditScraper := reddit.NewRedditScraper([]string{"all"})
+	redditScraper := reddit.NewRedditScraper(subreddits)
+
+	redditScraper.Run(context.Background())
 
 	serviceDependencies := application.NewServiceDependencies()
 
