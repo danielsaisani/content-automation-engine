@@ -46,10 +46,8 @@ func (s *RealScheduler) Run(ctx context.Context) error {
 	defer ticker.Stop()
 
 	for {
-		s.logger.Info("Scheduler ticked..")
 		select {
 		case <-ticker.C:
-			s.logger.Info("Triggering event..")
 			topic := Topic("misc")
 			s.eventBus <- events.TopicTriggered{
 				Event: *events.NewEvent(s.clock),
