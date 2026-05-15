@@ -53,7 +53,7 @@ func (c *CreatorService) Run(ctx context.Context) error {
 					continue
 				}
 				// loose filtering of stories
-				if !story.NSFW && story.Body.Populated() {
+				if !story.NSFW && len(story.Body) > 0 {
 					_, err := c.StoryRepository.Put(story)
 					if err != nil {
 						c.logger.Error("failed to save story", "err", err)

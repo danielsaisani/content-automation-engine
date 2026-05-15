@@ -45,7 +45,7 @@ func (h *Handler) Post(post *reddit.Post) error {
 	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
 	h.posts <- &creatorapi.ScrapedContent{
 		Title: post.Title,
-		Body:  creatorapi.ScrapedContentBody{Body: post.SelfText},
+		Body:  post.SelfText,
 		NSFW:  post.NSFW,
 	}
 	return nil

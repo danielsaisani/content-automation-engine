@@ -9,16 +9,7 @@ type Scraper interface {
 
 type ScrapedContent struct {
 	Title  string
-	Body   ScrapedContentBody
+	Body   string
 	NSFW   bool
 	Posted bool
-}
-
-type ScrapedContentBody struct {
-	Body string
-}
-
-// Populated returns whether the body actually exists to distinguish between posts that don't have any content and those that do.
-func (sb ScrapedContentBody) Populated() bool {
-	return len(sb.Body) > 0
 }
