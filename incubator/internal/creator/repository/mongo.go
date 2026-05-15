@@ -32,7 +32,20 @@ func NewMongoStoryRepository(repositoryConfig *MongoStoryRepositoryConfig) *Mong
 	}
 }
 
-func (mr *MongoStoryRepository) Get(interface{}) (interface{}, error) { return nil, nil }
+// Gets the story by the the ID
+func (mr *MongoStoryRepository) Get(searchCritera interface{}) (interface{}, error) {
+	var story api.Story
+
+	searchResult := mr.Client.Database("prod").Collection("stories").FindOne(context.TODO(), searchCritera)
+	if searchResultErr := searchResult.Err(); searchResultErr != nil {
+		return nil, searchResultErr
+	}
+	if err := searchResult.Decode(&story); err != nil {
+		return nil, err
+	}
+
+	return story, nil
+}
 
 func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
 	if mr.Client == nil {
