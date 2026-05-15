@@ -14,12 +14,12 @@ func TestConnectionURLBuilderProd(t *testing.T) {
 	connectionURL := urlBuilder.
 		Method("prod").
 		Credentials("user", "password").
-		Host("prod.skbzy7n.mongodb.net").
+		Host("prod.tableID.mongodb.net").
 		App("prod").
 		Build()
 
 	require.NotEmpty(t, connectionURL)
-	assert.Equal(t, "mongodb+srv://user:password@prod.skbzy7n.mongodb.net/?appName=prod", connectionURL)
+	assert.Equal(t, "mongodb+srv://user:password@prod.tableID.mongodb.net/?appName=prod", connectionURL)
 }
 
 func TestConnectionURLBuilderDev(t *testing.T) {
