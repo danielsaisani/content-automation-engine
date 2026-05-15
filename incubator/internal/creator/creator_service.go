@@ -2,8 +2,8 @@ package creator
 
 import (
 	"content-automation-engine/cmd/application"
-	"content-automation-engine/internal/api"
-	"content-automation-engine/internal/clock"
+	sharedapi "content-automation-engine/internal/api"
+	creatorapi "content-automation-engine/internal/creator/api"
 	"content-automation-engine/internal/events"
 	"context"
 	"fmt"
@@ -12,15 +12,21 @@ import (
 
 // CreatorService is the service responsible for creating and ideating new content to post, this service implements the `Service` interface and so can be treated as such
 type CreatorService struct {
-	clock             clock.Clock
+	clock             sharedapi.Clock
 	logger            *slog.Logger
 	schedulerEventBus <-chan events.TopicTriggered
 	creatorEventBus   chan<- events.StoryScraped
-	StoryRepository   api.ObjectRepository
-	StoryGenerator    api.Scraper
+	StoryRepository   creatorapi.StoryObjectRepository
+	StoryGenerator    creatorapi.Scraper
 }
 
-func NewCreatorService(serviceDependencies *application.ServiceDependencies, schedulerEventBus <-chan events.TopicTriggered, creatorEventBus chan<- events.StoryScraped, storyRepository api.ObjectRepository, storyGenerator api.Scraper) *CreatorService {
+func NewCreatorService(
+	serviceDependencies *application.ServiceDependencies,
+	schedulerEventBus <-chan events.TopicTriggered,
+	creatorEventBus chan<- events.StoryScraped,
+	storyRepository creatorapi.StoryObjectRepository,
+	storyGenerator creatorapi.Scraper,
+) *CreatorService {
 	return &CreatorService{
 		clock:             serviceDependencies.Clock,
 		logger:            serviceDependencies.Logger,
@@ -36,22 +42,25 @@ func (c *CreatorService) Run(ctx context.Context) error {
 	c.logger.Info("Starting creator..")
 
 	// Start Go Routine to handle new posts from story generator and insert them into the repository
-	go func() error {
+	go func() {
 		c.logger.Info("Starting up story listener")
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case story := <-c.StoryGenerator.Posts():
+				if story == nil {
+					continue
+				}
 				// loose filtering of stories
 				if !story.NSFW && story.Body.Populated() {
-					// save story to repository
 					_, err := c.StoryRepository.Put(story)
 					if err != nil {
-						return err
+						c.logger.Error("failed to save story", "err", err)
+						continue
 					}
 					c.logger.Info(fmt.Sprintf("Saved story to repository. %s", story.Title))
 				}
-			default:
-				c.logger.Info("No stories available yet!")
 			}
 		}
 	}()
@@ -70,11 +79,5 @@ func (c *CreatorService) Run(ctx context.Context) error {
 }
 
 func (c *CreatorService) Healthy(ctx context.Context) bool {
-	// The repository is the only dependency I know of.. maybe there's other checks to be done too
 	return c.StoryRepository.Healthy(ctx)
-}
-
-type Story struct {
-	Title string
-	Body  string
 }

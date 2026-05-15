@@ -4,7 +4,7 @@ import (
 	"content-automation-engine/cmd/application"
 	"content-automation-engine/cmd/config"
 	"content-automation-engine/internal/creator"
-	"content-automation-engine/internal/creator/reddit"
+	"content-automation-engine/internal/creator/scraper"
 	"content-automation-engine/internal/events"
 	"content-automation-engine/internal/observability/notifier"
 	"content-automation-engine/internal/scheduler"
@@ -43,7 +43,7 @@ func main() {
 		"mildlyinteresting", "photoshopbattles", "DIY", "food", "aww", "AITAH",
 	}
 
-	redditScraper := reddit.NewRedditScraper(subreddits)
+	redditScraper := scraper.NewRedditScraper(subreddits)
 
 	redditScraper.Run(context.Background())
 

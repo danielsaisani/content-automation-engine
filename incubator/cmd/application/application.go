@@ -1,14 +1,16 @@
 package application
 
 import (
+	"content-automation-engine/internal/api"
 	"content-automation-engine/internal/clock"
 	"context"
 	"log/slog"
 	"os"
 )
 
+// Base service dependencies that _every_ service will need
 type ServiceDependencies struct {
-	Clock  clock.Clock
+	Clock  api.Clock
 	Logger *slog.Logger
 }
 

@@ -3,22 +3,22 @@ package api
 import "context"
 
 type Scraper interface {
-	Posts() <-chan *Story // CreatorService reads from this and pushes it to the StoryRepository
+	Posts() <-chan *ScrapedContent // CreatorService reads from this and pushes it to the StoryRepository
 	Run(ctx context.Context) error
 }
 
-type Story struct {
+type ScrapedContent struct {
 	Title  string
-	Body   StoryBody
+	Body   ScrapedContentBody
 	NSFW   bool
 	Posted bool
 }
 
-type StoryBody struct {
+type ScrapedContentBody struct {
 	Body string
 }
 
 // Populated returns whether the body actually exists to distinguish between posts that don't have any content and those that do.
-func (sb StoryBody) Populated() bool {
+func (sb ScrapedContentBody) Populated() bool {
 	return len(sb.Body) > 0
 }

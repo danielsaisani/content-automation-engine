@@ -2,7 +2,7 @@ package scheduler
 
 import (
 	"content-automation-engine/cmd/application"
-	"content-automation-engine/internal/clock"
+	"content-automation-engine/internal/api"
 	"content-automation-engine/internal/events"
 	"context"
 	"log/slog"
@@ -12,7 +12,7 @@ import (
 // CreatorService is the service responsible for creating and ideating new content to post, this service implements the `Service` interface and so can be treated as such
 
 type RealScheduler struct {
-	clock    clock.Clock
+	clock    api.Clock
 	interval time.Duration
 	eventBus chan<- events.TopicTriggered
 	logger   *slog.Logger

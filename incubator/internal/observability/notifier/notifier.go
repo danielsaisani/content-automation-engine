@@ -2,7 +2,7 @@ package notifier
 
 import (
 	"content-automation-engine/cmd/application"
-	"content-automation-engine/internal/clock"
+	"content-automation-engine/internal/api"
 	"content-automation-engine/internal/events"
 	"context"
 	"log/slog"
@@ -10,7 +10,7 @@ import (
 )
 
 type NotifierService struct {
-	clock    clock.Clock
+	clock    api.Clock
 	interval time.Duration
 	logger   *slog.Logger
 	// Yes.. this is hacky, but I don't see an instant solution to polymorphic event consolidation

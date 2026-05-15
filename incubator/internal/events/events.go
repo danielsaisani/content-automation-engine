@@ -1,7 +1,7 @@
 package events
 
 import (
-	"content-automation-engine/internal/clock"
+	"content-automation-engine/internal/api"
 	"context"
 	"time"
 
@@ -15,7 +15,7 @@ type Event struct {
 }
 
 // NewEvent creates a new base event that handles the ID allocation and timestamp, this should be used across all services to create emitted events
-func NewEvent(clock clock.Clock) *Event {
+func NewEvent(clock api.Clock) *Event {
 	return &Event{
 		ID:          uuid.New().String(),
 		TriggeredAt: clock.Now(context.TODO()),

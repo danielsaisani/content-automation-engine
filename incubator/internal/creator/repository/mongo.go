@@ -1,6 +1,7 @@
 package creator
 
 import (
+	"content-automation-engine/internal/creator/api"
 	"context"
 	"errors"
 	"fmt"
@@ -31,6 +32,24 @@ func NewMongoStoryRepository(repositoryConfig *MongoStoryRepositoryConfig) *Mong
 	}
 }
 
+func (mr *MongoStoryRepository) Get(interface{}) (interface{}, error) { return nil, nil }
+
+func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
+	if mr.Client == nil {
+		return false, errors.New("mongodb client not initialised")
+	}
+	_, err := mr.Client.Database("prod").Collection("stories").InsertOne(context.TODO(), story)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (mr *MongoStoryRepository) GetBestStory(criteria api.StorySearchCriteria) (string, error) {
+	return "", nil
+}
+
 func (mr *MongoStoryRepository) InitialiseClient(ctx context.Context) error {
 	if mr.Config == nil || mr.Config.ConnectionURL == "" {
 		return errors.New("missing mongodb connection url")
@@ -51,20 +70,6 @@ func (mr *MongoStoryRepository) InitialiseClient(ctx context.Context) error {
 
 	mr.Client = client
 	return nil
-}
-
-func (mr *MongoStoryRepository) Get(interface{}) (interface{}, error) { return nil, nil }
-
-func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
-	if mr.Client == nil {
-		return false, errors.New("mongodb client not initialised")
-	}
-	_, err := mr.Client.Database("prod").Collection("stories").InsertOne(context.TODO(), story)
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
 
 // Performs a health check on the StoryRepository

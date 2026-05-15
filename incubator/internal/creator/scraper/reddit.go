@@ -1,7 +1,7 @@
-package reddit
+package scraper
 
 import (
-	"content-automation-engine/internal/api"
+	creatorapi "content-automation-engine/internal/creator/api"
 	"context"
 	"fmt"
 	"log/slog"
@@ -38,12 +38,16 @@ func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
 }
 
 type Handler struct {
-	posts chan *api.Story
+	posts chan *creatorapi.ScrapedContent
 }
 
 func (h *Handler) Post(post *reddit.Post) error {
 	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
-	h.posts <- &api.Story{Title: post.Title, Body: api.StoryBody{Body: post.SelfText}, NSFW: post.NSFW}
+	h.posts <- &creatorapi.ScrapedContent{
+		Title: post.Title,
+		Body:  creatorapi.ScrapedContentBody{Body: post.SelfText},
+		NSFW:  post.NSFW,
+	}
 	return nil
 }
 
@@ -55,11 +59,11 @@ type RedditScraper struct {
 func NewRedditScraper(subreddits []string) *RedditScraper {
 	return &RedditScraper{
 		config:  NewRedditScraperConfig(subreddits),
-		handler: &Handler{posts: make(chan *api.Story, 10)},
+		handler: &Handler{posts: make(chan *creatorapi.ScrapedContent, 10)},
 	}
 }
 
-func (rc *RedditScraper) Posts() <-chan *api.Story {
+func (rc *RedditScraper) Posts() <-chan *creatorapi.ScrapedContent {
 	return rc.handler.posts
 }
 
