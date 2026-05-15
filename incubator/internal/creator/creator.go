@@ -6,6 +6,7 @@ import (
 	"content-automation-engine/internal/clock"
 	"content-automation-engine/internal/events"
 	"context"
+	"fmt"
 	"log/slog"
 )
 
@@ -34,30 +35,33 @@ func NewCreatorService(serviceDependencies *application.ServiceDependencies, sch
 func (c *CreatorService) Run(ctx context.Context) error {
 	c.logger.Info("Starting creator..")
 
-	for {
-		select {
-		case <-c.schedulerEventBus:
-			c.logger.Info("Scheduled story retrieved!")
-			// Consume from scheduler bus
+	// Start Go Routine to handle new posts from story generator and insert them into the repository
+	go func() error {
+		c.logger.Info("Starting up story listener")
+		for {
 			select {
 			case story := <-c.StoryGenerator.Posts():
-				// save story to repository
-				_, err := c.StoryRepository.Put(story)
-				if err != nil {
-					return err
-				}
-
-				// emit event to creator event bus
-				c.creatorEventBus <- events.StoryScraped{
-					Event: *events.NewEvent(c.clock),
-					Story: events.StoryPayload{
-						Title: story.Title,
-						Body:  story.Body,
-					},
+				// loose filtering of stories
+				if !story.NSFW && story.Body.Populated() {
+					// save story to repository
+					_, err := c.StoryRepository.Put(story)
+					if err != nil {
+						return err
+					}
+					c.logger.Info(fmt.Sprintf("Saved story to repository. %s", story.Title))
 				}
 			default:
 				c.logger.Info("No stories available yet!")
 			}
+		}
+	}()
+
+	for {
+		select {
+		case <-c.schedulerEventBus:
+			c.logger.Info("Scheduled story retrieved!")
+			// retrieve story from Mongo
+
 		case <-ctx.Done():
 			c.logger.Info("Creator shutting down..")
 			return nil

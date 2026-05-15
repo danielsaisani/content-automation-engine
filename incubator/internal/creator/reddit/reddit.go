@@ -43,7 +43,7 @@ type Handler struct {
 
 func (h *Handler) Post(post *reddit.Post) error {
 	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
-	h.posts <- &api.Story{Title: post.Title, Body: post.SelfText}
+	h.posts <- &api.Story{Title: post.Title, Body: api.StoryBody{Body: post.SelfText}, NSFW: post.NSFW}
 	return nil
 }
 
