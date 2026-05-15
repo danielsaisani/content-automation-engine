@@ -62,10 +62,8 @@ type MongoStoryRepositoryConfig struct {
 }
 
 func NewMongoStoryRepositoryConfig(mongoUsername string, mongoPassword string, host string, mongoApp string, env string) *MongoStoryRepositoryConfig {
-	// mongodb+srv://<username>:<password>@prod.skbzy7n.mongodb.net/?appName=prod
 	urlBuilder := ConnectionURLBuilder{}
 	connectionURL := urlBuilder.Method(env).Credentials(mongoUsername, mongoPassword).Host(host).App(mongoApp).Build()
-	// connectionURL := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=%s", mongoUsername, mongoPassword, host, mongoApp)
 	return &MongoStoryRepositoryConfig{ConnectionURL: connectionURL}
 }
 
