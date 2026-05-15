@@ -1,0 +1,18 @@
+services:
+  backend:
+    depends_on: [mongo]
+    build: ./
+    env_file: .env
+    ports:
+      - "8000:8000"
+  mongo:
+    image: mongo:8.3.2
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_USERNAME
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_PASSWORD
+      GLIBC_TUNABLES: glibc.cpu.hwcaps=-SHSTK
+
+
+      

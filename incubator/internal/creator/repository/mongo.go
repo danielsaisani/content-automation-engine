@@ -4,20 +4,68 @@ import (
 	"content-automation-engine/internal/creator/api"
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
+type ConnectionURLBuilder struct {
+	lines []string
+}
+
+func (cb *ConnectionURLBuilder) Method(env string) *ConnectionURLBuilder {
+	cb.lines = append(cb.lines, "mongodb")
+	if env != "dev" {
+		cb.lines = append(cb.lines, "+srv")
+	}
+	cb.lines = append(cb.lines, "://")
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) Credentials(username string, password string) *ConnectionURLBuilder {
+	cb.username(username)
+	cb.lines = append(cb.lines, ":")
+	cb.password(password)
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) username(username string) *ConnectionURLBuilder {
+	cb.lines = append(cb.lines, username)
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) password(password string) *ConnectionURLBuilder {
+	cb.lines = append(cb.lines, password)
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) Host(host string) *ConnectionURLBuilder {
+	cb.lines = append(cb.lines, "@")
+	cb.lines = append(cb.lines, host)
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) App(appName string) *ConnectionURLBuilder {
+	cb.lines = append(cb.lines, "/?appName=")
+	cb.lines = append(cb.lines, appName)
+	return cb
+}
+
+func (cb *ConnectionURLBuilder) Build() string {
+	return strings.Join(cb.lines, "")
+}
+
 type MongoStoryRepositoryConfig struct {
 	ConnectionURL string
 }
 
-func NewMongoStoryRepositoryConfig(mongoUsername string, mongoPassword string, mongoApp string) *MongoStoryRepositoryConfig {
+func NewMongoStoryRepositoryConfig(mongoUsername string, mongoPassword string, host string, mongoApp string, env string) *MongoStoryRepositoryConfig {
 	// mongodb+srv://<username>:<password>@prod.skbzy7n.mongodb.net/?appName=prod
-	connectionURL := fmt.Sprintf("mongodb+srv://%s:%s@prod.skbzy7n.mongodb.net/?appName=%s", mongoUsername, mongoPassword, mongoApp)
+	urlBuilder := ConnectionURLBuilder{}
+	connectionURL := urlBuilder.Method(env).Credentials(mongoUsername, mongoPassword).Host(host).App(mongoApp).Build()
+	// connectionURL := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=%s", mongoUsername, mongoPassword, host, mongoApp)
 	return &MongoStoryRepositoryConfig{ConnectionURL: connectionURL}
 }
 
