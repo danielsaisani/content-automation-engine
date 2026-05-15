@@ -24,6 +24,8 @@ type PublishResponse struct {
 }
 
 func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) error {
+	c.logger.Info("Starting TikTok video upload", "title", input.Title)
+
 	userAgent, _ := GetUserAgent()
 
 	// Create HTTP client with proxy if needed
@@ -36,6 +38,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 			httpClient.Transport = &http.Transport{
 				Proxy: http.ProxyURL(proxyURL),
 			}
+			c.logger.Info("Using proxy for upload", "proxy", input.Proxy)
 		}
 	}
 
@@ -54,7 +57,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 	if err := json.NewDecoder(resp.Body).Decode(&projectResp); err != nil {
 		return fmt.Errorf("failed to decode project response: %w", err)
 	}
-	_ = projectResp.Project.ProjectID
+	c.logger.Debug("Project created", "projectID", projectResp.Project.ProjectID)
 
 	// 2. Upload Video to TikTok storage
 	videoID, sessionKey, uploadID, crcs, uploadHost, storeURI, videoAuth, awsSigner, awsCreds, err := c.UploadToTiktok(ctx, input.VideoPath, httpClient)
@@ -76,6 +79,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 		return fmt.Errorf("failed to finish upload: %w", err)
 	}
 	resp.Body.Close()
+	c.logger.Debug("Upload phase finished")
 
 	// 4. Commit Upload Inner
 	commitURL := "https://www.tiktok.com/top/v1?Action=CommitUploadInner&Version=2020-11-19&SpaceName=tiktok"
@@ -95,6 +99,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 		return fmt.Errorf("failed to commit upload: %w", err)
 	}
 	resp.Body.Close()
+	c.logger.Debug("Upload committed")
 
 	// 5. Publish Video
 	postData := map[string]interface{}{
@@ -140,6 +145,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 
 	if input.ScheduleTime != nil {
 		postData["feature_common_info_list"].([]interface{})[0].(map[string]interface{})["schedule_time"] = input.ScheduleTime.Unix()
+		c.logger.Info("Scheduling video", "time", input.ScheduleTime)
 	}
 
 	// Sign the publish request
@@ -180,6 +186,7 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 		return fmt.Errorf("publish failed: %s (code %d)", pubResp.StatusMsg, pubResp.StatusCode)
 	}
 
+	c.logger.Info("TikTok video published successfully")
 	return nil
 }
 

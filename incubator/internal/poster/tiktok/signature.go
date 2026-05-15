@@ -26,6 +26,8 @@ type Signatures struct {
 }
 
 func (c *TiktokClient) GenerateSignatures(ctx context.Context, targetURL string, userAgent string) (*Signatures, error) {
+	c.logger.Debug("Generating signatures", "url", targetURL)
+
 	// 1. Prepare Chromedp
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("disable-blink-features", "AutomationControlled"),
@@ -94,6 +96,7 @@ func (c *TiktokClient) GenerateSignatures(ctx context.Context, targetURL string,
 		return nil, fmt.Errorf("failed to generate x-tt-params: %w", err)
 	}
 
+	c.logger.Debug("Signatures generated successfully")
 	return &Signatures{
 		Signature: res.Signature,
 		VerifyFP:  verifyFP,
