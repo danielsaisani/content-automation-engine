@@ -32,7 +32,7 @@ func NewMongoStoryRepository(repositoryConfig *MongoStoryRepositoryConfig) *Mong
 	}
 }
 
-// Gets the story by the the ID
+// Get gets the story by the the ID
 func (mr *MongoStoryRepository) Get(searchCritera interface{}) (interface{}, error) {
 	var story api.Story
 
@@ -59,6 +59,7 @@ func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
 	return true, nil
 }
 
+// GetBestStory Will be used by the creator service to emit an event to the content generation service with a story ID
 func (mr *MongoStoryRepository) GetBestStory(criteria api.StorySearchCriteria) (string, error) {
 	return "", nil
 }
