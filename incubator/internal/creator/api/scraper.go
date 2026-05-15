@@ -8,8 +8,7 @@ type Scraper interface {
 }
 
 type ScrapedContent struct {
-	Title  string
-	Body   string
-	NSFW   bool
-	Posted bool
+	Title string
+	Body  string
+	NSFW  bool
 }
