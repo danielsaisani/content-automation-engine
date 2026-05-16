@@ -15,6 +15,7 @@ type ConnectionURLBuilder struct {
 	lines []string
 }
 
+// Method adds the scheme to be used for the URL based on the environment.
 func (cb *ConnectionURLBuilder) Method(env string) *ConnectionURLBuilder {
 	cb.lines = append(cb.lines, "mongodb")
 	if env != "dev" {
@@ -53,6 +54,7 @@ func (cb *ConnectionURLBuilder) App(appName string) *ConnectionURLBuilder {
 	return cb
 }
 
+// Build returns the encoded URL as a string.
 func (cb *ConnectionURLBuilder) Build() string {
 	return strings.Join(cb.lines, "")
 }
