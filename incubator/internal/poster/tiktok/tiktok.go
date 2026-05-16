@@ -1,6 +1,7 @@
 package tiktok
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 )
@@ -20,6 +21,7 @@ type TiktokConfig struct {
 
 type TiktokClient struct {
 	Config *TiktokConfig
+	logger *slog.Logger
 }
 
 type TiktokCookies map[string]string
@@ -34,7 +36,10 @@ func (tc *TiktokCookies) GetDCID() string {
 	return (*tc)["tt-target-idc"]
 }
 
-func NewTiktokClient() *TiktokClient {
+func NewTiktokClient(logger *slog.Logger) *TiktokClient {
+	if logger == nil {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	}
 
 	fontSize, _ := strconv.Atoi(os.Getenv("IMAGEMAGICK_FONT_SIZE"))
 
@@ -50,5 +55,8 @@ func NewTiktokClient() *TiktokClient {
 		ImagemagickTextBackgroundColor: os.Getenv("IMAGEMAGICK_TEXT_BACKGROUND_COLOR"),
 		ImagemagickBinary:              os.Getenv("IMAGEMAGICK_BINARY"),
 	}
-	return &TiktokClient{Config: config}
+	return &TiktokClient{
+		Config: config,
+		logger: logger,
+	}
 }

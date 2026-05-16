@@ -40,7 +40,7 @@ func (c *TiktokClient) Login(ctx context.Context, loginName string) (TiktokCooki
 	taskCtx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
-	fmt.Println("Please log in to TikTok in the browser window...")
+	c.logger.Info("Opening browser for TikTok login", "url", c.Config.LoginURL)
 
 	var collectedCookies TiktokCookies = make(TiktokCookies)
 
@@ -82,7 +82,7 @@ func (c *TiktokClient) Login(ctx context.Context, loginName string) (TiktokCooki
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("login failed: %%w", err)
+		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	// Save cookies
@@ -91,5 +91,6 @@ func (c *TiktokClient) Login(ctx context.Context, loginName string) (TiktokCooki
 	os.WriteFile(cookiesPath, data, 0644)
 
 	c.Config.Cookies = collectedCookies
+	c.logger.Info("Login successful, cookies saved", "loginName", loginName)
 	return collectedCookies, nil
 }

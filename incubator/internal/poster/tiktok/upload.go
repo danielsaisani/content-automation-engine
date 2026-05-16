@@ -41,6 +41,8 @@ type ApplyUploadInnerResponse struct {
 }
 
 func (c *TiktokClient) UploadToTiktok(ctx context.Context, videoFile string, httpClient *http.Client) (string, string, string, []uint32, string, string, string, *v4.Signer, credentials.StaticCredentialsProvider, error) {
+	c.logger.Info("Starting upload to TikTok storage", "videoFile", videoFile)
+
 	// 1. Get Upload Auth
 	req, _ := http.NewRequestWithContext(ctx, "GET", "https://www.tiktok.com/api/v1/video/upload/auth/?aid=1988", nil)
 	c.setHeaders(req)
@@ -136,6 +138,8 @@ func (c *TiktokClient) UploadToTiktok(ctx context.Context, videoFile string, htt
 		partNumber := i + 1
 		chunkURL := fmt.Sprintf("https://%s/%s?partNumber=%d&uploadID=%s&phase=transfer", uploadHost, storeURI, partNumber, uploadID)
 
+		c.logger.Debug("Uploading chunk", "partNumber", partNumber, "size", n)
+
 		chunkReq, _ := http.NewRequestWithContext(ctx, "POST", chunkURL, bytes.NewReader(chunk))
 		chunkReq.Header.Set("Authorization", videoAuth)
 		chunkReq.Header.Set("Content-Type", "application/octet-stream")
@@ -153,6 +157,7 @@ func (c *TiktokClient) UploadToTiktok(ctx context.Context, videoFile string, htt
 		}
 	}
 
+	c.logger.Info("Video chunks uploaded successfully", "videoID", videoID)
 	return videoID, sessionKey, uploadID, crcs, uploadHost, storeURI, videoAuth, awsSigner, awsCreds, nil
 }
 
