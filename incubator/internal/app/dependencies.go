@@ -1,9 +1,8 @@
-package application
+package app
 
 import (
 	"content-automation-engine/internal/api"
-	"content-automation-engine/internal/clock"
-	"context"
+	"content-automation-engine/internal/app/clock"
 	"log/slog"
 	"os"
 )
@@ -21,13 +20,3 @@ func NewServiceDependencies() *ServiceDependencies {
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 }
-
-type Application interface {
-	Run(ctx context.Context) error
-	Healthy(ctx context.Context) bool
-}
-
-type ContentAutomationEngineApplication struct{}
-
-func (a *ContentAutomationEngineApplication) Run(ctx context.Context) error    { return nil }
-func (a *ContentAutomationEngineApplication) Healthy(ctx context.Context) bool { return true }

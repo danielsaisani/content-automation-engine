@@ -1,15 +1,30 @@
 package scheduler
 
 import (
-	"content-automation-engine/cmd/application"
 	"content-automation-engine/internal/api"
+	"content-automation-engine/internal/app"
 	"content-automation-engine/internal/events"
 	"context"
+	"log"
 	"log/slog"
 	"time"
+
+	"github.com/vrischmann/envconfig"
 )
 
-// CreatorService is the service responsible for creating and ideating new content to post, this service implements the `Service` interface and so can be treated as such
+type Config struct {
+	interval string `envconfig:"INTERVAL"`
+}
+
+// MustGetConfig loads in the configuration from environment variables for the Scheduler Service.
+// If the parsing fails, then the application will come to a halt.
+func MustGetConfig() *Config {
+	cfg := &Config{}
+	if err := envconfig.InitWithPrefix(cfg, "SCHEDULER"); err != nil {
+		log.Fatal("Error loading config:", err)
+	}
+	return cfg
+}
 
 type RealScheduler struct {
 	clock    api.Clock
@@ -18,10 +33,14 @@ type RealScheduler struct {
 	logger   *slog.Logger
 }
 
-func NewRealScheduler(serviceDependencies *application.ServiceDependencies, eventBus chan<- events.TopicTriggered) *RealScheduler {
+func NewRealScheduler(serviceDependencies *app.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealScheduler {
+	interval, err := time.ParseDuration(cfg.interval)
+	if err != nil {
+		log.Fatal("Error translating interval into time duration:", err)
+	}
 	return &RealScheduler{
 		clock:    serviceDependencies.Clock,
-		interval: time.Hour,
+		interval: interval,
 		logger:   serviceDependencies.Logger,
 		eventBus: eventBus,
 	}
@@ -29,8 +48,8 @@ func NewRealScheduler(serviceDependencies *application.ServiceDependencies, even
 
 type Topic string
 
-func (topic *Topic) Valid() bool {
-	switch *topic {
+func (topic Topic) Valid() bool {
+	switch topic {
 	case "misc":
 		return true
 	default:

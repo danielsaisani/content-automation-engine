@@ -1,8 +1,8 @@
 package notifier
 
 import (
-	"content-automation-engine/cmd/application"
 	"content-automation-engine/internal/api"
+	"content-automation-engine/internal/app"
 	"content-automation-engine/internal/events"
 	"context"
 	"log/slog"
@@ -21,7 +21,7 @@ type NotificationPayload struct {
 	Message Message
 }
 
-func NewNotifierService(serviceDependencies *application.ServiceDependencies, topicChan chan events.TopicTriggered) *NotifierService {
+func NewNotifierService(serviceDependencies *app.ServiceDependencies, topicChan chan events.TopicTriggered) *NotifierService {
 	return &NotifierService{
 		clock:     serviceDependencies.Clock,
 		interval:  time.Minute,

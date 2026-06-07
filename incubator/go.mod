@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/turnage/graw v0.0.0-20250321203609-ee225b526649
+	github.com/vrischmann/envconfig v1.4.1
 	go.mongodb.org/mongo-driver/v2 v2.6.0
 )
 
