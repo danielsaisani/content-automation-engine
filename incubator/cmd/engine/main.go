@@ -20,6 +20,7 @@ func main() {
 	if err := cfg.Load(context.Background()); err != nil {
 		log.Fatal(err)
 	}
+	// TODO: this configuration should be loaded in from the environment and not in the binary..
 	subreddits := []string{
 		"worldnews", "news", "politics", "europe", "ukpolitics",
 		"conservative", "liberal", "geopolitics", "upliftingnews", "nottheonion",
