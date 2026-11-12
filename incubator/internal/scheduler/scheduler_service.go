@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	interval string `envconfig:"INTERVAL"`
+	Interval string `envconfig:"INTERVAL"`
 }
 
 // MustGetConfig loads in the configuration from environment variables for the Scheduler Service.
@@ -34,7 +34,7 @@ type RealSchedulerService struct {
 }
 
 func NewRealSchedulerService(serviceDependencies *service.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealSchedulerService {
-	interval, err := time.ParseDuration(cfg.interval)
+	interval, err := time.ParseDuration(cfg.Interval)
 	if err != nil {
 		log.Fatal("Error translating interval into time duration:", err)
 	}
