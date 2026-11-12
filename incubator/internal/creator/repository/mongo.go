@@ -4,8 +4,10 @@ import (
 	"content-automation-engine/internal/creator/api"
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
@@ -109,7 +111,26 @@ func (mr *MongoStoryRepository) Put(story interface{}) (bool, error) {
 
 // GetBestStory Will be used by the creator service to emit an event to the content generation service with a story ID
 func (mr *MongoStoryRepository) GetBestStory(criteria api.StorySearchCriteria) (string, error) {
-	return "", nil
+	// TODO: rank stories and filter by criteria (e.g. topic) once stored stories carry that data.
+	// For the MVP any single story is considered the "best" one.
+	if mr.Client == nil {
+		return "", errors.New("mongodb client not initialised")
+	}
+
+	var result struct {
+		ID bson.ObjectID `bson:"_id"`
+	}
+
+	opts := options.FindOne().SetProjection(bson.D{{Key: "_id", Value: 1}})
+	err := mr.Client.Database("prod").Collection("stories").FindOne(context.TODO(), bson.D{}, opts).Decode(&result)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return "", fmt.Errorf("no stories available: %w", err)
+		}
+		return "", fmt.Errorf("finding best story: %w", err)
+	}
+
+	return result.ID.Hex(), nil
 }
 
 func (mr *MongoStoryRepository) InitialiseClient(ctx context.Context) error {
