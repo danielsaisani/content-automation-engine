@@ -1,4 +1,4 @@
-package app
+package service
 
 import (
 	"content-automation-engine/internal/api"

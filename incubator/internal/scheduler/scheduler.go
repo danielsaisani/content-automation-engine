@@ -2,8 +2,8 @@ package scheduler
 
 import (
 	"content-automation-engine/internal/api"
-	"content-automation-engine/internal/app"
 	"content-automation-engine/internal/events"
+	"content-automation-engine/internal/service"
 	"context"
 	"log"
 	"log/slog"
@@ -33,7 +33,7 @@ type RealScheduler struct {
 	logger   *slog.Logger
 }
 
-func NewRealScheduler(serviceDependencies *app.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealScheduler {
+func NewRealScheduler(serviceDependencies *service.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealScheduler {
 	interval, err := time.ParseDuration(cfg.interval)
 	if err != nil {
 		log.Fatal("Error translating interval into time duration:", err)
