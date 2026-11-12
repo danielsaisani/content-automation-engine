@@ -26,19 +26,19 @@ func MustGetConfig() *Config {
 	return cfg
 }
 
-type RealScheduler struct {
+type RealSchedulerService struct {
 	clock    api.Clock
 	interval time.Duration
 	eventBus chan<- events.TopicTriggered
 	logger   *slog.Logger
 }
 
-func NewRealScheduler(serviceDependencies *service.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealScheduler {
+func NewRealSchedulerService(serviceDependencies *service.ServiceDependencies, eventBus chan<- events.TopicTriggered, cfg *Config) *RealSchedulerService {
 	interval, err := time.ParseDuration(cfg.interval)
 	if err != nil {
 		log.Fatal("Error translating interval into time duration:", err)
 	}
-	return &RealScheduler{
+	return &RealSchedulerService{
 		clock:    serviceDependencies.Clock,
 		interval: interval,
 		logger:   serviceDependencies.Logger,
@@ -57,7 +57,7 @@ func (topic Topic) Valid() bool {
 	}
 }
 
-func (s *RealScheduler) Run(ctx context.Context) error {
+func (s *RealSchedulerService) Run(ctx context.Context) error {
 	s.logger.Info("Starting scheduler..")
 
 	// TODO: replace with actual clock that is injected
@@ -80,4 +80,4 @@ func (s *RealScheduler) Run(ctx context.Context) error {
 	}
 }
 
-func (s *RealScheduler) Healthy(ctx context.Context) bool { return true }
+func (s *RealSchedulerService) Healthy(ctx context.Context) bool { return true }

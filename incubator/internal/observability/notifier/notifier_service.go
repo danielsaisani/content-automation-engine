@@ -44,3 +44,7 @@ func (n *NotifierService) Run(ctx context.Context) error {
 		}
 	}
 }
+
+func (n *NotifierService) Healthy(ctx context.Context) bool { return true }
+
+func (n *NotifierService) Name(ctx context.Context) string { return "Notifier" }

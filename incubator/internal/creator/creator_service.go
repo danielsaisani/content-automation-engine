@@ -84,3 +84,7 @@ func (c *CreatorService) Run(ctx context.Context) error {
 func (c *CreatorService) Healthy(ctx context.Context) bool {
 	return c.StoryRepository.Healthy(ctx)
 }
+
+func (c *CreatorService) Name(ctx context.Context) string {
+	return "Creator"
+}
