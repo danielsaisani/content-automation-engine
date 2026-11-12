@@ -93,4 +93,4 @@ func (a *ContentAutomationEngineApplication) Healthy(ctx context.Context) bool {
 func (a *ContentAutomationEngineApplication) Name(ctx context.Context) string {
 	return "ContentAutomationEngineApplication"
 }
-func (a *ContentAutomationEngineApplication) Port(ctx context.Context) int { return 8080 }
+func (a *ContentAutomationEngineApplication) Port(ctx context.Context) int { return 8000 }
