@@ -1,6 +1,9 @@
 package clock
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type MockClock struct {
 	time time.Time
@@ -14,6 +17,6 @@ func (c MockClock) SetTime(newTime time.Time) {
 	c.time = newTime
 }
 
-func (c MockClock) Now() time.Time {
+func (c MockClock) Now(ctx context.Context) time.Time {
 	return c.time
 }
