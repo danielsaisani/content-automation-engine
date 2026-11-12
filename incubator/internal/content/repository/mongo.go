@@ -1,7 +1,7 @@
 package creator
 
 import (
-	"content-automation-engine/internal/creator/api"
+	"content-automation-engine/internal/content/api"
 	"context"
 	"errors"
 	"fmt"

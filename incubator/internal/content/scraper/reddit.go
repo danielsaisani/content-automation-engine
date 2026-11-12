@@ -1,7 +1,7 @@
 package scraper
 
 import (
-	creatorapi "content-automation-engine/internal/creator/api"
+	contentapi "content-automation-engine/internal/content/api"
 	"context"
 	"fmt"
 	"log/slog"
@@ -38,12 +38,12 @@ func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
 }
 
 type Handler struct {
-	posts chan *creatorapi.ScrapedContent
+	posts chan *contentapi.ScrapedContent
 }
 
 func (h *Handler) Post(post *reddit.Post) error {
 	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
-	h.posts <- &creatorapi.ScrapedContent{
+	h.posts <- &contentapi.ScrapedContent{
 		Title: post.Title,
 		Body:  post.SelfText,
 		NSFW:  post.NSFW,
@@ -59,11 +59,11 @@ type RedditScraper struct {
 func NewRedditScraper(subreddits []string) *RedditScraper {
 	return &RedditScraper{
 		config:  NewRedditScraperConfig(subreddits),
-		handler: &Handler{posts: make(chan *creatorapi.ScrapedContent, 10)},
+		handler: &Handler{posts: make(chan *contentapi.ScrapedContent, 10)},
 	}
 }
 
-func (rc *RedditScraper) Posts() <-chan *creatorapi.ScrapedContent {
+func (rc *RedditScraper) Posts() <-chan *contentapi.ScrapedContent {
 	return rc.handler.posts
 }
 
@@ -74,6 +74,7 @@ func (rc *RedditScraper) Run(ctx context.Context) error {
 		return err
 	}
 
+	// TODO: use the returned wait function to handle errors on the graw poller side
 	stop, _, err := graw.Scan(rc.handler, script, *rc.config.Engine)
 	if err != nil {
 		return err

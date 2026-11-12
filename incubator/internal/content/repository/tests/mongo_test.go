@@ -1,7 +1,7 @@
 package tests
 
 import (
-	creator "content-automation-engine/internal/creator/repository"
+	content "content-automation-engine/internal/content/repository"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestConnectionURLBuilderProd(t *testing.T) {
-	urlBuilder := creator.ConnectionURLBuilder{}
+	urlBuilder := content.ConnectionURLBuilder{}
 
 	connectionURL := urlBuilder.
 		Method("prod").
@@ -23,7 +23,7 @@ func TestConnectionURLBuilderProd(t *testing.T) {
 }
 
 func TestConnectionURLBuilderDev(t *testing.T) {
-	urlBuilder := creator.ConnectionURLBuilder{}
+	urlBuilder := content.ConnectionURLBuilder{}
 
 	connectionURL := urlBuilder.
 		Method("dev").

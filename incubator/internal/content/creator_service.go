@@ -2,7 +2,7 @@ package creator
 
 import (
 	sharedapi "content-automation-engine/internal/api"
-	creatorapi "content-automation-engine/internal/creator/api"
+	contentapi "content-automation-engine/internal/content/api"
 	"content-automation-engine/internal/events"
 	"content-automation-engine/internal/service"
 	"context"
@@ -16,16 +16,16 @@ type CreatorService struct {
 	logger            *slog.Logger
 	schedulerEventBus <-chan events.TopicTriggered
 	creatorEventBus   chan<- events.StoryScraped
-	StoryRepository   creatorapi.StoryObjectRepository
-	StoryGenerator    creatorapi.Scraper
+	StoryRepository   contentapi.StoryObjectRepository
+	StoryGenerator    contentapi.Scraper
 }
 
 func NewCreatorService(
 	serviceDependencies *service.ServiceDependencies,
 	schedulerEventBus <-chan events.TopicTriggered,
 	creatorEventBus chan<- events.StoryScraped,
-	storyRepository creatorapi.StoryObjectRepository,
-	storyGenerator creatorapi.Scraper,
+	storyRepository contentapi.StoryObjectRepository,
+	storyGenerator contentapi.Scraper,
 ) *CreatorService {
 	return &CreatorService{
 		clock:             serviceDependencies.Clock,

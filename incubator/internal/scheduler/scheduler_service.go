@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	Interval string `envconfig:"INTERVAL"`
+	Interval string
 }
 
 // MustGetConfig loads in the configuration from environment variables for the Scheduler Service.

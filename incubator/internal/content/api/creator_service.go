@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-type CreatorService interface {
+type ContentService interface {
 	sharedAPI.Service
 	GetStoryByID(ctx context.Context, id string) (Story, error)
 }
