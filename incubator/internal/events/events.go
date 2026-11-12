@@ -31,13 +31,7 @@ type TopicTriggered struct {
 	Topic TopicPayload
 }
 
-type StoryPayload struct {
-	Title string
-	Body  string
-}
-
-// Event to signify a story has been scraped and is ready to be used for the next step in the pipeline or by any downstream consumers
+// Event to signify a story should be retrieved from the creator service for the next step in the pipeline or by any downstream consumers
 type StoryScraped struct {
 	Event
-	Story StoryPayload
 }

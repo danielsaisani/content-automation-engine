@@ -69,7 +69,10 @@ func (c *CreatorService) Run(ctx context.Context) error {
 		select {
 		case <-c.schedulerEventBus:
 			c.logger.Info("Scheduled story retrieved!")
-			// retrieve story from Mongo
+
+			c.creatorEventBus <- events.StoryScraped{
+				Event: *events.NewEvent(c.clock),
+			}
 
 		case <-ctx.Done():
 			c.logger.Info("Creator shutting down..")
