@@ -4,16 +4,22 @@ import (
 	contentapi "content-automation-engine/internal/content/api"
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/turnage/graw"
 	"github.com/turnage/graw/reddit"
+	"github.com/vrischmann/envconfig"
 )
 
 type RedditScraperConfig struct {
-	Engine *graw.Config
+	Engine    *graw.Config
+	AppID     string
+	AppSecret string
+	Username  string
+	Password  string
 }
 
 // normalizeSubredditName returns the name graw expects: no leading slashes and no "r/" prefix.
@@ -28,13 +34,24 @@ func normalizeSubredditName(name string) string {
 
 // NewRedditScraperConfig creates a new RedditScraperConfig with the given subreddits
 func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
+	grawCfg := &graw.Config{}
+	cfg := &RedditScraperConfig{
+		Engine: grawCfg,
+	}
+
 	out := make([]string, 0, len(subreddits))
 	for _, s := range subreddits {
 		if n := normalizeSubredditName(s); n != "" {
 			out = append(out, n)
 		}
 	}
-	return &RedditScraperConfig{&graw.Config{Subreddits: out}}
+	grawCfg.Subreddits = out
+
+	if err := envconfig.InitWithPrefix(cfg, "SCRAPER"); err != nil {
+		log.Fatal("Error loading config:", err)
+	}
+
+	return cfg
 }
 
 type Handler struct {
@@ -69,13 +86,21 @@ func (rc *RedditScraper) Posts() <-chan *contentapi.ScrapedContent {
 
 func (rc *RedditScraper) Run(ctx context.Context) error {
 	// The unathenticated Reddit API has a rate limit of 30 requests per minute, so we're being cautious and doing 12 requests per minute.
-	script, err := reddit.NewScript("content-automation-engine/0.1", 5*time.Second)
-	if err != nil {
-		return err
-	}
+	bot, err := reddit.NewBot(
+		reddit.BotConfig{
+			Agent: "content-automation-engine/0.1",
+			App: reddit.App{
+				ID:       rc.config.AppID,
+				Secret:   rc.config.AppSecret,
+				Username: rc.config.Username,
+				Password: rc.config.Password,
+			},
+			Rate: 5 * time.Second,
+		},
+	)
 
 	// TODO: use the returned wait function to handle errors on the graw poller side
-	stop, _, err := graw.Scan(rc.handler, script, *rc.config.Engine)
+	stop, _, err := graw.Run(rc.handler, bot, *rc.config.Engine)
 	if err != nil {
 		return err
 	}
