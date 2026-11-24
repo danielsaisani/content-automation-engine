@@ -66,10 +66,24 @@ type Handler struct {
 
 func (h *Handler) Post(post *reddit.Post) error {
 	slog.Info(fmt.Sprintf("Received new post from subreddit. Title: %s", post.Title))
+
 	h.posts <- &contentapi.ScrapedContent{
-		Title: post.Title,
-		Body:  post.SelfText,
-		NSFW:  post.NSFW,
+		ID:           post.ID,
+		Name:         post.Name,
+		Title:        post.Title,
+		Body:         post.SelfText,
+		NSFW:         post.NSFW,
+		Likes:        uint(post.Ups),
+		Dislikes:     uint(post.Downs),
+		CommentCount: uint32(post.NumComments),
+		Comments:     post.Replies,
+		Media:        post.Media,
+		Subreddit:    post.Subreddit,
+		SubredditID:  post.SubredditID,
+		Score:        post.Score,
+		Author:       post.Author,
+		// This is a bit hacky but I don't see any other way of getting around this
+		CreatedUTC: time.Unix(int64(post.CreatedUTC), 0).UTC(),
 	}
 	return nil
 }
