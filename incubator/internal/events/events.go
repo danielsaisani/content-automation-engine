@@ -1,3 +1,8 @@
+// Package events holds the events that flow between services.
+//
+// Events only say that something HAS happened. They carry identifiers, not data: a consumer
+// that needs the details asks the producing service for them through that service's API.
+// Every event channel has exactly one producer and one consumer.
 package events
 
 import (
@@ -24,6 +29,7 @@ func NewEvent(clock api.Clock) *Event {
 
 type TopicPayload string
 
+// TopicTriggered is emitted by the scheduler when it is time to produce a new post.
 // TODO: figure out better name for this or better way to emit "scheduled" events
 // Right now, we infer that since this is a topic event, it implies the scheduler has scheduled an upload (but these are distinct events)
 type TopicTriggered struct {
@@ -31,7 +37,28 @@ type TopicTriggered struct {
 	Topic TopicPayload
 }
 
-// Event to signify a story should be retrieved from the creator service for the next step in the pipeline or by any downstream consumers
-type StoryScraped struct {
+// StorySelected is emitted by the content service once it has claimed a story for the pipeline.
+// Consumers fetch the story itself with ContentService.GetStoryByID.
+type StorySelected struct {
 	Event
+	StoryID string
+}
+
+// VideoReady is emitted by the generator service once a video for a story exists.
+// Consumers fetch the video details with GeneratorService.GetVideoByID.
+type VideoReady struct {
+	Event
+	StoryID string
+	VideoID string
+}
+
+// Publish sends an event on a channel, giving up if the context is cancelled first.
+// It reports whether the event was sent.
+func Publish[T any](ctx context.Context, ch chan<- T, event T) bool {
+	select {
+	case ch <- event:
+		return true
+	case <-ctx.Done():
+		return false
+	}
 }

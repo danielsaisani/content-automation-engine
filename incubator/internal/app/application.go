@@ -1,103 +1,225 @@
 package app
 
 import (
-	creator "content-automation-engine/internal/content"
-	content "content-automation-engine/internal/content/repository"
+	"content-automation-engine/internal/api"
+	"content-automation-engine/internal/content"
+	contentrepository "content-automation-engine/internal/content/repository"
 	"content-automation-engine/internal/content/scraper"
-	"content-automation-engine/internal/events"
+	"content-automation-engine/internal/generator"
+	"content-automation-engine/internal/generator/narrator"
+	"content-automation-engine/internal/generator/renderer"
+	"content-automation-engine/internal/mongodb"
+	"content-automation-engine/internal/poster"
+	posterapi "content-automation-engine/internal/poster/api"
+	"content-automation-engine/internal/poster/platform"
+	posterrepository "content-automation-engine/internal/poster/repository"
+	"content-automation-engine/internal/poster/tiktok"
 	"content-automation-engine/internal/scheduler"
 	"content-automation-engine/internal/service"
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+	"log/slog"
+	"time"
+
+	"github.com/vrischmann/envconfig"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"golang.org/x/sync/errgroup"
 )
 
-type ContentAutomationEngineApplication struct{}
-
-func (a *ContentAutomationEngineApplication) Start(ctx context.Context) error {
-	var mongoRepositoryConfig *content.MongoStoryRepositoryConfig
-
-	mongoRepositoryConfig = content.NewMongoStoryRepositoryConfig(os.Getenv("MONGO_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_HOST"), os.Getenv("MONGO_APP_NAME"), os.Getenv("ENV"))
-
-	repo := content.NewMongoStoryRepository(mongoRepositoryConfig)
-	if err := repo.InitialiseClient(ctx); err != nil {
-		return fmt.Errorf("story repository: %w", err)
-	}
-
-	// TODO: this configuration should be loaded in from the environment and not in the binary..
-	subreddits := []string{
-		"worldnews", "news", "politics", "europe", "ukpolitics",
-		"conservative", "liberal", "geopolitics", "upliftingnews", "nottheonion",
-		"nfl", "nba", "soccer", "baseball", "hockey",
-		"formula1", "tennis", "MMA", "cricket", "fantasyfootball",
-		"gaming", "pcgaming", "PS5", "XboxSeriesX", "leagueoflegends",
-		"Minecraft", "Fortnite", "GlobalOffensive", "Competitiveoverwatch", "DotA2",
-		"technology", "programming", "Python", "javascript", "webdev",
-		"artificial", "MachineLearning", "ChatGPT", "cybersecurity", "linux",
-		"movies", "television", "anime", "marvelstudios", "StarWars",
-		"NetflixBestOf", "popheads", "hiphopheads", "music", "books",
-		"AskReddit", "AmItheAsshole", "relationship_advice", "dating_advice", "tifu",
-		"confession", "unpopularopinion", "changemyview", "LifeProTips", "self",
-		"wallstreetbets", "investing", "personalfinance", "CryptoCurrency", "Bitcoin",
-		"ethereum", "stocks", "financialindependence", "frugal", "eupersonalfinance",
-		"memes", "dankmemes", "funny", "me_irl", "facepalm",
-		"therewasanattempt", "Unexpected", "instant_regret", "nextfuckinglevel", "oddlysatisfying",
-		"science", "space", "history", "todayilearned", "explainlikeimfive",
-		"askscience", "medicine", "psychology", "philosophy", "economics",
-		"pics", "gifs", "videos", "WTF", "interestingasfuck",
-		"mildlyinteresting", "photoshopbattles", "DIY", "food", "aww", "AITAH",
-	}
-
-	redditScraper := scraper.NewRedditScraper(subreddits)
-
-	serviceDependencies := service.NewServiceDependencies()
-
-	err := redditScraper.Run(context.Background())
-
-	if err != nil {
-		serviceDependencies.Logger.Info(fmt.Sprintf("Error when running Reddit scraper!: %s", err))
-		return nil
-	}
-
-	serviceDependencies.Logger.Info("Starting engine..")
-
-	serviceDependencies.Logger.Info("Creating story repository")
-
-	topicCh := make(chan events.TopicTriggered, 10)
-	storyCh := make(chan events.StoryScraped, 10)
-
-	// TOOD: run all services from main thread one by one
-	// var services []api.Service
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	schedulerConfig := scheduler.MustGetConfig()
-
-	scheduler := scheduler.NewRealSchedulerService(serviceDependencies, topicCh, schedulerConfig)
-	go scheduler.Run(ctx)
-
-	creator := creator.NewCreatorService(serviceDependencies, topicCh, storyCh, repo, redditScraper)
-	go creator.Run(ctx)
-
-	serviceDependencies.Logger.Info("Engine started..")
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	serviceDependencies.Logger.Info("Engine stopping..")
-
-	return nil
+// Config is the application-level configuration, read from ENV, PIPELINE_ENABLED and HTTP_PORT.
+type Config struct {
+	// Env is "dev" for local development (plain mongodb:// URL); anything else is production.
+	Env string `envconfig:"optional"`
+	// PipelineEnabled switches on scheduling, video generation and posting. When false the
+	// engine only scrapes stories into MongoDB.
+	PipelineEnabled bool `envconfig:"default=false"`
+	// HTTPPort is the port the health endpoint listens on.
+	HTTPPort int `envconfig:"default=8000"`
 }
 
-func (a *ContentAutomationEngineApplication) Shutdown(ctx context.Context) error { return nil }
+// LoadConfig reads the application configuration from the environment.
+func LoadConfig() (*Config, error) {
+	cfg := &Config{}
+	if err := envconfig.Init(cfg); err != nil {
+		return nil, fmt.Errorf("loading application config: %w", err)
+	}
+	return cfg, nil
+}
 
-func (a *ContentAutomationEngineApplication) Healthy(ctx context.Context) bool { return true }
+const startupTimeout = 30 * time.Second
+
+var _ api.Application = (*ContentAutomationEngineApplication)(nil)
+
+// ContentAutomationEngineApplication builds the real engine from the environment and runs it.
+type ContentAutomationEngineApplication struct {
+	logger      *slog.Logger
+	cfg         *Config
+	mongoClient *mongo.Client
+}
+
+func NewContentAutomationEngineApplication(logger *slog.Logger) *ContentAutomationEngineApplication {
+	return &ContentAutomationEngineApplication{logger: logger, cfg: &Config{HTTPPort: 8000}}
+}
+
+// Start builds every service and runs the engine. It blocks until ctx is cancelled (a clean
+// stop, returning nil) or something fails (returning the error).
+func (a *ContentAutomationEngineApplication) Start(ctx context.Context) error {
+	a.logger.Info("Starting engine")
+
+	cfg, err := LoadConfig()
+	if err != nil {
+		return err
+	}
+	a.cfg = cfg
+	a.logger.Info("Loaded configuration", "env", cfg.Env, "pipelineEnabled", cfg.PipelineEnabled, "httpPort", cfg.HTTPPort)
+
+	parts, err := a.buildParts(ctx)
+	if err != nil {
+		return err
+	}
+
+	engine, err := NewEngine(*parts)
+	if err != nil {
+		return err
+	}
+
+	group, ctx := errgroup.WithContext(ctx)
+	group.Go(func() error { return serveHealth(ctx, cfg.HTTPPort, engine) })
+	group.Go(func() error { return engine.RunServices(ctx) })
+
+	a.logger.Info("Engine started")
+	err = group.Wait()
+	a.logger.Info("Engine stopped")
+	return err
+}
+
+// buildParts loads each module's configuration and builds the real implementations.
+func (a *ContentAutomationEngineApplication) buildParts(ctx context.Context) (*EngineParts, error) {
+	deps := service.NewServiceDependenciesWithLogger(a.logger)
+
+	contentCfg, err := content.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	scraperCfg, err := scraper.LoadRedditScraperConfig()
+	if err != nil {
+		return nil, err
+	}
+	mongoCfg, err := mongodb.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Never log the connection URL: it contains the password.
+	a.logger.Info("Connecting to MongoDB", "host", mongoCfg.Host, "database", mongoCfg.Database)
+	connectCtx, cancel := context.WithTimeout(ctx, startupTimeout)
+	defer cancel()
+	client, err := mongodb.Connect(connectCtx, mongoCfg.ConnectionURL(a.cfg.Env))
+	if err != nil {
+		return nil, fmt.Errorf("connecting to mongodb at %s: %w", mongoCfg.Host, err)
+	}
+	a.mongoClient = client
+	a.logger.Info("Connected to MongoDB")
+	db := client.Database(mongoCfg.Database)
+
+	storyRepository := contentrepository.NewMongoStoryRepository(db)
+	if err := storyRepository.EnsureIndexes(connectCtx); err != nil {
+		return nil, err
+	}
+
+	parts := &EngineParts{
+		Dependencies:    deps,
+		ContentConfig:   contentCfg,
+		StoryRepository: storyRepository,
+		Scraper:         scraper.NewRedditScraper(a.logger, scraperCfg),
+	}
+	if !a.cfg.PipelineEnabled {
+		return parts, nil
+	}
+
+	pipeline, err := a.buildPipeline(connectCtx, db)
+	if err != nil {
+		return nil, err
+	}
+	parts.Pipeline = pipeline
+	return parts, nil
+}
+
+func (a *ContentAutomationEngineApplication) buildPipeline(ctx context.Context, db *mongo.Database) (*Pipeline, error) {
+	schedulerCfg, err := scheduler.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	generatorCfg, err := generator.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	kokoroCfg, err := narrator.LoadKokoroConfig()
+	if err != nil {
+		return nil, err
+	}
+	rendererCfg, err := renderer.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	posterCfg, err := poster.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	postRepository := posterrepository.NewMongoPostRepository(db)
+	if err := postRepository.EnsureIndexes(ctx); err != nil {
+		return nil, err
+	}
+
+	publishTo, err := a.buildPlatform(posterCfg)
+	if err != nil {
+		return nil, err
+	}
+	a.logger.Info("Publishing pipeline is enabled", "platform", publishTo.Name(), "narrator", kokoroCfg.URL)
+
+	return &Pipeline{
+		SchedulerConfig: schedulerCfg,
+		GeneratorConfig: generatorCfg,
+		PosterConfig:    posterCfg,
+		PostRepository:  postRepository,
+		Narrator:        narrator.NewKokoroNarrator(kokoroCfg),
+		Renderer:        renderer.NewFFmpegRenderer(rendererCfg),
+		Platform:        publishTo,
+	}, nil
+}
+
+func (a *ContentAutomationEngineApplication) buildPlatform(cfg *poster.Config) (posterapi.Platform, error) {
+	switch cfg.Platform {
+	case "dryrun":
+		return platform.NewDryRun(a.logger), nil
+	case "tiktok":
+		tiktokCfg, err := tiktok.LoadPlatformConfig()
+		if err != nil {
+			return nil, err
+		}
+		return tiktok.NewPlatform(tiktokCfg, tiktok.NewTiktokClient(a.logger))
+	default:
+		return nil, fmt.Errorf("unknown poster platform %q: want dryrun or tiktok", cfg.Platform)
+	}
+}
+
+// Shutdown releases what Start acquired. Call it after Start has returned.
+func (a *ContentAutomationEngineApplication) Shutdown(ctx context.Context) error {
+	if a.mongoClient == nil {
+		return nil
+	}
+	if err := a.mongoClient.Disconnect(ctx); err != nil {
+		return fmt.Errorf("disconnecting from mongodb: %w", err)
+	}
+	a.mongoClient = nil
+	return nil
+}
 
 func (a *ContentAutomationEngineApplication) Name(ctx context.Context) string {
 	return "ContentAutomationEngineApplication"
 }
-func (a *ContentAutomationEngineApplication) Port(ctx context.Context) int { return 8000 }
+
+func (a *ContentAutomationEngineApplication) Port(ctx context.Context) api.Port {
+	return api.Port(a.cfg.HTTPPort)
+}

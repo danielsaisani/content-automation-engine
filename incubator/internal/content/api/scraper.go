@@ -3,12 +3,11 @@ package api
 import "context"
 
 type Scraper interface {
-	Posts() <-chan *ScrapedContent // CreatorService reads from this and pushes it to the StoryRepository
+	// Posts is the stream of scraped content. The content service reads from this and
+	// pushes it to the StoryRepository.
+	Posts() <-chan *ScrapedContent
+	// Run scrapes until ctx is cancelled. It blocks, and recovers from failures by itself.
 	Run(ctx context.Context) error
-}
-
-type ScrapedContent struct {
-	Title string
-	Body  string
-	NSFW  bool
+	// Healthy reports whether the scraper is currently connected to its source.
+	Healthy(ctx context.Context) bool
 }

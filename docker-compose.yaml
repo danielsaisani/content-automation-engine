@@ -3,6 +3,9 @@ services:
     depends_on: [mongo]
     build: ./
     env_file: .env
+    environment:
+      # Only used when PIPELINE_ENABLED=true.
+      GENERATOR_KOKORO_URL: http://kokoro:8880
     ports:
       - "8000:8000"
   mongo:
@@ -13,6 +16,11 @@ services:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_USERNAME
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_PASSWORD
       GLIBC_TUNABLES: glibc.cpu.hwcaps=-SHSTK
-
-
-      
+  # Free, self-hosted text-to-speech for the generator. It is a large image, so it only
+  # starts when asked for: `docker compose --profile pipeline up`.
+  kokoro:
+    profiles: ["pipeline"]
+    # TODO: pin to a release tag instead of latest.
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    ports:
+      - "8880:8880"

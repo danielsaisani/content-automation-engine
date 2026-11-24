@@ -104,9 +104,9 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 	// 5. Publish Video
 	postData := map[string]interface{}{
 		"post_common_info": map[string]interface{}{
-			"creation_id":           creationID,
+			"creation_id":          creationID,
 			"enter_post_page_from": 1,
-			"post_type":             3,
+			"post_type":            3,
 		},
 		"feature_common_info_list": []interface{}{
 			map[string]interface{}{
@@ -130,13 +130,13 @@ func (c *TiktokClient) UploadVideo(ctx context.Context, input *TiktokPostInput) 
 		},
 		"single_post_req_list": []interface{}{
 			map[string]interface{}{
-				"batch_index": 0,
-				"video_id":    videoID,
+				"batch_index":   0,
+				"video_id":      videoID,
 				"is_long_video": 0,
 				"single_post_feature_info": map[string]interface{}{
-					"text":        input.Title,
-					"markup_text": input.Title,
-					"music_info":  map[string]interface{}{},
+					"text":         input.Title,
+					"markup_text":  input.Title,
+					"music_info":   map[string]interface{}{},
 					"poster_delay": 0,
 				},
 			},
