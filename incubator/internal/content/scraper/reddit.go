@@ -91,7 +91,6 @@ func (rc *RedditScraper) Posts() <-chan *contentapi.ScrapedContent {
 }
 
 func (rc *RedditScraper) Run(ctx context.Context) error {
-	// The unathenticated Reddit API has a rate limit of 30 requests per minute, so we're being cautious and doing 12 requests per minute.
 	bot, err := reddit.NewBot(
 		reddit.BotConfig{
 			Agent: "content-automation-engine/0.1",
