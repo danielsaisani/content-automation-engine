@@ -14,12 +14,16 @@ import (
 	"github.com/vrischmann/envconfig"
 )
 
-type RedditScraperConfig struct {
-	Engine    *graw.Config
+type RedditConfig struct {
 	AppID     string
 	AppSecret string
 	Username  string
 	Password  string
+}
+
+type Config struct {
+	RC *RedditConfig
+	SC *graw.Config
 }
 
 // normalizeSubredditName returns the name graw expects: no leading slashes and no "r/" prefix.
@@ -33,10 +37,12 @@ func normalizeSubredditName(name string) string {
 }
 
 // NewRedditScraperConfig creates a new RedditScraperConfig with the given subreddits
-func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
+func NewRedditScraperConfig(subreddits []string) *Config {
 	grawCfg := &graw.Config{}
-	cfg := &RedditScraperConfig{
-		Engine: grawCfg,
+	redditConfig := &RedditConfig{}
+	cfg := &Config{
+		SC: grawCfg,
+		RC: redditConfig,
 	}
 
 	out := make([]string, 0, len(subreddits))
@@ -47,7 +53,7 @@ func NewRedditScraperConfig(subreddits []string) *RedditScraperConfig {
 	}
 	grawCfg.Subreddits = out
 
-	if err := envconfig.InitWithPrefix(cfg, "SCRAPER"); err != nil {
+	if err := envconfig.InitWithPrefix(redditConfig, "SCRAPER"); err != nil {
 		log.Fatal("Error loading config:", err)
 	}
 
@@ -69,7 +75,7 @@ func (h *Handler) Post(post *reddit.Post) error {
 }
 
 type RedditScraper struct {
-	config  *RedditScraperConfig
+	config  *Config
 	handler *Handler
 }
 
@@ -90,17 +96,17 @@ func (rc *RedditScraper) Run(ctx context.Context) error {
 		reddit.BotConfig{
 			Agent: "content-automation-engine/0.1",
 			App: reddit.App{
-				ID:       rc.config.AppID,
-				Secret:   rc.config.AppSecret,
-				Username: rc.config.Username,
-				Password: rc.config.Password,
+				ID:       rc.config.RC.AppID,
+				Secret:   rc.config.RC.AppSecret,
+				Username: rc.config.RC.Username,
+				Password: rc.config.RC.Password,
 			},
 			Rate: 5 * time.Second,
 		},
 	)
 
 	// TODO: use the returned wait function to handle errors on the graw poller side
-	stop, _, err := graw.Run(rc.handler, bot, *rc.config.Engine)
+	stop, _, err := graw.Run(rc.handler, bot, *rc.config.SC)
 	if err != nil {
 		return err
 	}
