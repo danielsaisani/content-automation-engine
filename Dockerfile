@@ -9,7 +9,7 @@
     
     COPY incubator/ ./
     
-    RUN CGO_ENABLED=0 GOOS=linux go build -o bin/content-automation-engine ./cmd/engine/main.go
+    RUN CGO_ENABLED=0 GOOS=linux go build -o bin/content-automation-engine ./cmd/main.go
     
     # ---- Stage 2: Runner ----
     FROM scratch
