@@ -28,26 +28,8 @@ func (a *ContentAutomationEngineApplication) Start(ctx context.Context) error {
 
 	// TODO: this configuration should be loaded in from the environment and not in the binary..
 	subreddits := []string{
-		"worldnews", "news", "politics", "europe", "ukpolitics",
-		"conservative", "liberal", "geopolitics", "upliftingnews", "nottheonion",
-		"nfl", "nba", "soccer", "baseball", "hockey",
-		"formula1", "tennis", "MMA", "cricket", "fantasyfootball",
-		"gaming", "pcgaming", "PS5", "XboxSeriesX", "leagueoflegends",
-		"Minecraft", "Fortnite", "GlobalOffensive", "Competitiveoverwatch", "DotA2",
-		"technology", "programming", "Python", "javascript", "webdev",
-		"artificial", "MachineLearning", "ChatGPT", "cybersecurity", "linux",
-		"movies", "television", "anime", "marvelstudios", "StarWars",
-		"NetflixBestOf", "popheads", "hiphopheads", "music", "books",
-		"AskReddit", "AmItheAsshole", "relationship_advice", "dating_advice", "tifu",
-		"confession", "unpopularopinion", "changemyview", "LifeProTips", "self",
-		"wallstreetbets", "investing", "personalfinance", "CryptoCurrency", "Bitcoin",
-		"ethereum", "stocks", "financialindependence", "frugal", "eupersonalfinance",
-		"memes", "dankmemes", "funny", "me_irl", "facepalm",
-		"therewasanattempt", "Unexpected", "instant_regret", "nextfuckinglevel", "oddlysatisfying",
-		"science", "space", "history", "todayilearned", "explainlikeimfive",
-		"askscience", "medicine", "psychology", "philosophy", "economics",
-		"pics", "gifs", "videos", "WTF", "interestingasfuck",
-		"mildlyinteresting", "photoshopbattles", "DIY", "food", "aww", "AITAH",
+		"worldnews", "news", "politics", "europe", "ukpolitics", "upliftingnews", "AskReddit", "AmItheAsshole", "relationship_advice", "confession", "unpopularopinion", "changemyview", "LifeProTips", "self",
+		"memes", "dankmemes", "funny", "AITAH",
 	}
 
 	redditScraper := scraper.NewRedditScraper(subreddits)
