@@ -13,10 +13,15 @@
     
     # ---- Stage 2: Runner ----
     FROM scratch
-    
-    # Copy certificate authority from build step
+
+    # TLS + SRV DNS: scratch has neither a CA bundle nor nsswitch, so mongodb+srv
+    # and Reddit HTTPS fail certificate verification / hostname lookup otherwise.
     COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+    COPY --from=builder /etc/nsswitch.conf /etc/nsswitch.conf
     COPY --from=builder /build/bin/content-automation-engine /content-automation-engine
+
+    ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+    ENV SSL_CERT_DIR=/etc/ssl/certs
     
     EXPOSE 8000
     
